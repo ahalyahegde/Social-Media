@@ -1,9 +1,7 @@
 <?php
-
   //
   //  Script to read user_timeline data and post tweets
-  //
-
+ //
   class  application
   {
     public $twitter_consumer_key = 'kDzo5MYbi8lQDxUjYsENjvrhm';
@@ -16,17 +14,13 @@
     public $facebook_page_access_token="CAAI7NRi2RJABAEKHDiXB9ZAgsqYiQCF2Y17KvZBNvsRBwuLCS4jj3w5c0mK6B7XFVM6VgjdOcQMaVUpVJEs2WYPviZBNOgmXabdtkaSIkpJd6mgGlelN7EwZBkWtzjiLW0mHptLs0LdpN1HPNPVmJ6FCKaoqZBDmiY15PxZAt8vHImrV9et9bg";
     public $facebook_group_id='751452211639661';
     public $facebook_group_access_token="CAAI7NRi2RJABAOCZBb4JxfDwj0k8wbsvzRHSoTw6lZAk8E8DmsJuPwZBiidxiZABEKfeSqAxnmsreFrUYkxJtjDpcxpEu4fYgJFoLHZCGnFa4NCrpuomzk97KjbY9AxZCGZB4KfhgLXvtsfLWTwzMKdFIXuDKjBm0vdlAZBNkpLaZABqk9B9FecPRbnF84hZCXxTcZD";
-
-
     //
     //  Method to read Twitter user_timeline data
     //
-
     function scanTwitter($url,$query)
     {
       //Collecting parameters 
       $oauth = array(
-
           'oauth_consumer_key' => $this->twitter_consumer_key,
           'oauth_token' => $this->twitter_access_token,
                     // a stronger nonce is recommended
@@ -44,7 +38,6 @@
       ksort($arr); // primary sort (key)
 
       $querystring = urldecode(http_build_query($arr, '', '&'));
-
       //Ceate a signature Base String
       $base_string = 'GET' . "&" . rawurlencode($url) . "&" . rawurlencode($querystring);
       $key = rawurlencode($this->twitter_consumer_secret) . "&" . rawurlencode($this->twitter_access_token_secret);
@@ -58,13 +51,11 @@
       //Building Header string  
       $auth = "OAuth " . urldecode(http_build_query($oauth, '', ', '));
       $options = array(CURLOPT_HTTPHEADER => array("Authorization: $auth"),
-
             //Twitter
             CURLOPT_HEADER => false,
             CURLOPT_URL => $url,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_SSL_VERIFYPEER => false);
-
       $feed = curl_init();
       curl_setopt_array($feed, $options);
       $twitter_response = curl_exec($feed);
@@ -72,21 +63,14 @@
       curl_close($feed);
       printf(PHP_EOL."----Twitter data----".PHP_EOL);
       print_r($twitter_data);
-
     } //scanTwitter()
-
-
     //
     // Method to read Facebook Page and Group Posts
     //
-
     function scanFacebook()
     {
-
       //facebook page scan
-
       $fb_page_feed="https://graph.facebook.com/{$this->facebook_page_id}/feed?access_token=".$this->facebook_page_access_token;
-
       $feed = curl_init();
       curl_setopt($feed, CURLOPT_URL, $fb_page_feed);
       curl_setopt($feed, CURLOPT_REFERER, '');
@@ -108,29 +92,20 @@
 
       $fb_group_response = json_decode(curl_exec($feed));
       curl_close($feed);
-
-
       //Display Responses
-
       printf("----Facebook group data----");
      print_r($fb_group_response);
 
       printf("----Facebook Page data-----");
       print_r($fb_page_response);
-
     } //scanFacebook()
-
-
     //
     // Method to post data to Twitter
     // 
-
        function postTwitter($status)
-
     {
       $url = 'https://api.twitter.com/1.1/statuses/update.json';
       $param_string = 'oauth_consumer_key=' . $this->twitter_consumer_key .
-
             '&oauth_nonce=' . time() .
             '&oauth_signature_method=' . $this->sign_method .
             '&oauth_timestamp=' . time() .
@@ -159,19 +134,15 @@
         curl_setopt($ch, CURLOPT_POST, 1);
          curl_setopt($ch, CURLOPT_POSTFIELDS, 'status=' . rawurlencode($status));
         curl_setopt($ch, CURLOPT_URL, $url);
-
         $twitter_post = json_decode(curl_exec($ch));
         curl_close($ch);
         print_r($twitter_post);
       }
-
       //
       // Method to post data to Facebook Page and Group
       // 
-
       function postFacebook($status)
       {
-
         //Facebook page post
         $fb_page_post="https://graph.facebook.com/{$this->facebook_page_id}/feed?message=$status&access_token=".$this->facebook_page_access_token;
         $ch=curl_init();
@@ -182,17 +153,12 @@
         curl_setopt($ch, CURLOPT_AUTOREFERER, true);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-
         $fb_page_post = json_decode(curl_exec($ch));
-
-         }//postFacebook()
-
+     }//postFacebook()
     //
     //  Select whether you want to Scan or Post through commandline
     //
-
     public function select()
-
     {
        global $argc, $argv;
        if ($argc == 1 || $argc > 3)
@@ -239,12 +205,10 @@
                 }
               }
             }
-
              else
              {
                if($argv[1]=='post')
                {
-
                   printf("Enter text to be posted".PHP_EOL) ;
                   $status=readline();
                   printf("Select medias to post" .PHP_EOL);
@@ -281,6 +245,3 @@
 $service = new application();
 $service->select();
 ?>
-                                                                                             305,1         Bot
-                                                                           273,1         88%
-                                                                                         
