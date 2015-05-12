@@ -14,6 +14,10 @@
     public $facebook_page_access_token="CAAI7NRi2RJABAEKHDiXB9ZAgsqYiQCF2Y17KvZBNvsRBwuLCS4jj3w5c0mK6B7XFVM6VgjdOcQMaVUpVJEs2WYPviZBNOgmXabdtkaSIkpJd6mgGlelN7EwZBkWtzjiLW0mHptLs0LdpN1HPNPVmJ6FCKaoqZBDmiY15PxZAt8vHImrV9et9bg";
     public $facebook_group_id='751452211639661';
     public $facebook_group_access_token="CAAI7NRi2RJABAOCZBb4JxfDwj0k8wbsvzRHSoTw6lZAk8E8DmsJuPwZBiidxiZABEKfeSqAxnmsreFrUYkxJtjDpcxpEu4fYgJFoLHZCGnFa4NCrpuomzk97KjbY9AxZCGZB4KfhgLXvtsfLWTwzMKdFIXuDKjBm0vdlAZBNkpLaZABqk9B9FecPRbnF84hZCXxTcZD";
+    public static $serverName="localhost";
+    public static $userName = "root";
+    public static $password = "general";
+    public static $dbname = "social_media";
     //
     //  Method to read Twitter user_timeline data
     //
@@ -47,7 +51,6 @@
       $url         = str_replace("&amp;", "&", $url);
 
       $oauth['oauth_signature'] = $signature;
-
       //Building Header string  
       $auth = "OAuth " . urldecode(http_build_query($oauth, '', ', '));
       $options = array(CURLOPT_HTTPHEADER => array("Authorization: $auth"),
@@ -61,8 +64,58 @@
       $twitter_response = curl_exec($feed);
       $twitter_data = json_decode($twitter_response);
       curl_close($feed);
-      printf(PHP_EOL."----Twitter data----".PHP_EOL);
-      print_r($twitter_data);
+       $conn = mysqli_connect(self::$serverName,self::$userName,self::$password,self::$dbname);
+
+      foreach($twitter_data as $index1 => $val1)
+        {
+         $tweet_id=$val1['id_str'];
+         $created_at=$val1['created_at'];
+         $text=$val1['text'];
+	       $reply_to_user_id=$val1['in_reply_to_user_id'];
+	       $reply_to_screen_name=$val1['in_reply_to_screen_name'];				
+	       $retweet_count=$val1['retweet_count'];
+	       $fovorite_count=$val1['favorite_count'];
+
+         $sql="INSERT INTO twitter_scan(tweet_id,created_at,text,reply_to_user_id,reply_to_screen_name,retweet_count,favorite_count) VALUES('$tweet_id','$created_at','$text','$reply_to_user_id','$reply_to_screen_name','$retweet_count','$fovorite_count')";
+         $conn->query($sql); 
+         foreach($val1 as $index2 => $v2)    //entities
+         { 
+           if ($index2 == 'entities')  
+             {
+               foreach($v2 as $index3 => $v3) //entities-hashtags
+               { 
+                 switch($index3)
+                 {
+                   case 'user_mentions': 
+                      foreach ($v3 as $index4 => $v4) 
+                      {
+                          $screen_name=$v4['screen_name'];
+                          $sql="UPDATE twitter_scan SET user_mention_id = '$screen_name' WHERE tweet_id = $tweet_id";             
+                          $conn->query($sql);   
+                        }
+                    break;
+                   case 'hashtags':  
+                         foreach ($v3 as $index4 => $v4) 
+                        {
+                          $hashtag_text=$v4['text'];
+                          $sql="UPDATE twitter_scan SET hashtag_text = '$hashtag_text' WHERE tweet_id = $tweet_id";         
+                          $conn->query($sql);                    
+                        }
+                    break;
+                    case 'urls':
+                         foreach ($v3 as $index4 => $v4) 
+                        {
+                          $url=$v4['expanded_url'];
+                          $sql="UPDATE twitter_scan SET url = '$url' WHERE tweet_id = $tweet_id";      
+                          $conn->query($sql);
+                        }
+                    break;
+                }
+              }
+            }
+          }
+        }
+          $conn->close();
     } //scanTwitter()
     //
     // Method to read Facebook Page and Group Posts
@@ -79,7 +132,56 @@
       curl_setopt($feed, CURLOPT_RETURNTRANSFER, 1);
       curl_setopt($feed, CURLOPT_TIMEOUT, 10);
        $fb_page_response = json_decode(curl_exec($feed));
+ $conn = mysqli_connect(self::$serverName,self::$userName,self::$password,self::$dbname);
 
+      foreach($fb_page_response as $index=>$val)
+      {
+         if($index == 'data')
+         { 
+          foreach($val as $index1=>$val1)
+         { 
+           $group_status_id=$val1['id'];
+           $group_status_message=$val1['message'];
+           $created_time=$val1['created_time'];
+           $updated_time=$val1['updated_time'];
+           $type=$val1['type']; 
+                    
+           $sql="INSERT INTO facebook_scan(post_id,message,type,created_at,updated_at) VALUES ('$group_status_id','$group_status_message','$type','$created_time','$updated_time') ";           
+           $conn->query($sql);
+           foreach($val1 as $index2=>$val2)
+           {
+              switch($index2)
+             {               
+                case 'from': 
+                  foreach($val2 as $index3=>$val3)
+                  {
+                    $from_name=$val2['name'];
+                    $sql="UPDATE facebook_scan SET from_name='$from_name' WHERE post_id='$group_status_id'";
+                    $conn->query($sql);
+                 } 
+                 break;
+                case 'privacy':
+                 foreach($val2 as $index3=>$val3)
+                 { 
+                   $privacy_value=$val2['value'];
+                   $privacy_description=$val2['description'];
+                   $sql="UPDATE facebook_scan SET privacy_value='$privacy_value',privay_description='$privacy_description' WHERE post_id='$group_status_id'";
+                   $conn->query($sql);
+                 }
+                 break;
+             case 'application':  
+                 foreach($val2 as $index3 => $val3)
+                 {
+                   $application_name=$val2['name'];
+                   $sql="UPDATE facebook_scan SET application_name='$application_name' WHERE post_id='$group_status_id'";
+                   $conn->query($sql);
+                 }  
+               break; 
+               }
+             } 
+            }
+          }            
+        }  
       //Facebook Group scan
       $group_url="https://graph.facebook.com/{$this->facebook_group_id}/feed?access_token=".$this->facebook_group_access_token;
       $feed=curl_init();
@@ -91,14 +193,57 @@
       curl_setopt($feed, CURLOPT_TIMEOUT, 10);
 
       $fb_group_response = json_decode(curl_exec($feed));
-      curl_close($feed);
-      //Display Responses
-      printf("----Facebook group data----");
-     print_r($fb_group_response);
-
-      printf("----Facebook Page data-----");
-      print_r($fb_page_response);
-    } //scanFacebook()
+      foreach($fb_group_response as $index=>$val)
+      {
+         if($index == 'data')
+         { 
+          foreach(array_slice($val, 0, sizeof($val)-1)  as $index1=>$val1)
+         { 
+           $group_status_id=$val1['id'];
+           $group_status_message=$val1['message'];
+           $created_time=$val1['created_time'];
+	   $updated_time=$val1['updated_time'];
+           $type=$val1['type'];	
+                    
+           $sql="INSERT INTO facebook_scan(post_id,message,type,created_at,updated_at) VALUES ('$group_status_id','$group_status_message','$type','$created_time','$updated_time') ";           
+           $conn->query($sql);
+           foreach($val1 as $index2=>$val2)
+           {
+              switch($index2)
+             {               
+                case 'from': 
+                  foreach($val2 as $index3=>$val3)
+                  {
+                    $from_name=$val2['name'];
+                    $sql="UPDATE facebook_scan SET from_name='$from_name' WHERE post_id='$group_status_id'";
+                    $conn->query($sql);
+                 } 
+                 break;
+                case 'privacy':
+                 foreach($val2 as $index3=>$val3)
+                 { 
+                   $privacy_value=$val2['value'];
+                   $privacy_description=$val2['description'];
+                   $sql="UPDATE facebook_scan SET privacy_value='$privacy_value',privay_description='$privacy_description' WHERE post_id='$group_status_id'";
+                   $conn->query($sql);
+                 }
+                 break;
+             case 'application':  
+                 foreach($val2 as $index3 => $val3)
+                 {
+                   $application_name=$val2['name'];
+                   $sql="UPDATE facebook_scan SET application_name='$application_name' WHERE post_id='$group_status_id'";
+                   $conn->query($sql);
+                 }  
+               break; 
+               }
+             } 
+            }
+          }            
+        }  
+     $conn->close();
+     curl_close($feed);
+     } //scanFacebook()
     //
     // Method to post data to Twitter
     // 
