@@ -71,15 +71,31 @@
          $tweet_id=$val1['id_str'];
          $created_at=$val1['created_at'];
          $text=$val1['text'];
-	       $reply_to_user_id=$val1['in_reply_to_user_id'];
-	       $reply_to_screen_name=$val1['in_reply_to_screen_name'];				
-	       $retweet_count=$val1['retweet_count'];
-	       $fovorite_count=$val1['favorite_count'];
+         $reply_to_status_id=$val1['in_reply_to_status_id'];
+         $reply_to_user_id=$val1['in_reply_to_user_id'];
+         $reply_to_screen_name=$val1['in_reply_to_screen_name'];				
+         $retweet_count=$val1['retweet_count'];
+         $fovorite_count=$val1['favorite_count'];
 
          $sql="INSERT INTO twitter_scan(tweet_id,created_at,text,reply_to_user_id,reply_to_screen_name,retweet_count,favorite_count) VALUES('$tweet_id','$created_at','$text','$reply_to_user_id','$reply_to_screen_name','$retweet_count','$fovorite_count')";
          $conn->query($sql); 
          foreach($val1 as $index2 => $v2)    //entities
          { 
+            if($index2 == 'user')
+            {
+              foreach($v2 as $vv2)
+              {
+                $posted_by=$v2['screen_name'];
+                $sql="UPDATE twitter_scan SET posted_by = '$posted_by' WHERE tweet_id = $tweet_id";
+                $conn->query($sql);
+
+              }
+            }
+
+            else
+            {
+	
+         	
            if ($index2 == 'entities')  
              {
                foreach($v2 as $index3 => $v3) //entities-hashtags
@@ -115,7 +131,7 @@
             }
           }
         }
-          $conn->close();
+       }   $conn->close();
     } //scanTwitter()
     //
     // Method to read Facebook Page and Group Posts
