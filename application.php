@@ -4,19 +4,19 @@
  //
   class  application
   {
-    public $twitter_consumer_key = 'kDzo5MYbi8lQDxUjYsENjvrhm';
-    public $twitter_consumer_secret = '27BmsrY6VIJdF8VGztdboY5s4fP3p87aRwE0peY1GYvCuXEadU';
-    public $twitter_access_token = '2534471005-C0AWIkzouNX1rMd9k9suYONgXMpLhVcBhdS9g75';
-    public $twitter_access_token_secret = 'ftuz6qnvzVkUEHJrvKPC0R0sNFInBqZruKDADiAAI413a';
+    public $twitter_consumer_key = '<consumer-key>';
+    public $twitter_consumer_secret = '<consumer-secret>';
+    public $twitter_access_token = '<ccess_token>';
+    public $twitter_access_token_secret = '<token-secret>';
     public $twitter_version = '1.0';
     public $sign_method = 'HMAC-SHA1';
     public $facebook_page_id='1387602394895539';
-    public $facebook_page_access_token="CAAI7NRi2RJABAEKHDiXB9ZAgsqYiQCF2Y17KvZBNvsRBwuLCS4jj3w5c0mK6B7XFVM6VgjdOcQMaVUpVJEs2WYPviZBNOgmXabdtkaSIkpJd6mgGlelN7EwZBkWtzjiLW0mHptLs0LdpN1HPNPVmJ6FCKaoqZBDmiY15PxZAt8vHImrV9et9bg";
+    public $facebook_page_access_token="<page-access-token>";
     public $facebook_group_id='751452211639661';
-    public $facebook_group_access_token="CAAI7NRi2RJABAOCZBb4JxfDwj0k8wbsvzRHSoTw6lZAk8E8DmsJuPwZBiidxiZABEKfeSqAxnmsreFrUYkxJtjDpcxpEu4fYgJFoLHZCGnFa4NCrpuomzk97KjbY9AxZCGZB4KfhgLXvtsfLWTwzMKdFIXuDKjBm0vdlAZBNkpLaZABqk9B9FecPRbnF84hZCXxTcZD";
+    public $facebook_group_access_token="<group-access-token>";
     public static $serverName="localhost";
-    public static $userName = "root";
-    public static $password = "general";
+    public static $userName = "<username>";
+    public static $password = "<password>";
     public static $dbname = "social_media";
     //
     //  Method to read Twitter user_timeline data
@@ -77,7 +77,20 @@
          $retweet_count=$val1['retweet_count'];
          $fovorite_count=$val1['favorite_count'];
 
-         $sql="INSERT INTO twitter_scan(tweet_id,created_at,text,reply_to_user_id,reply_to_screen_name,retweet_count,favorite_count) VALUES('$tweet_id','$created_at','$text','$reply_to_user_id','$reply_to_screen_name','$retweet_count','$fovorite_count')";
+         $sql="INSERT INTO twitter_scan(
+	 		tweet_id,
+	 		created_at,
+			text,reply_to_user_id,
+			reply_to_screen_name,
+			retweet_count,
+			favorite_count) 
+			
+			VALUES(
+			'$tweet_id','$created_at','$text',
+			'$reply_to_user_id',
+			'$reply_to_screen_name',
+			'$retweet_count',
+			'$fovorite_count')";
          $conn->query($sql); 
          foreach($val1 as $index2 => $v2)    //entities
          { 
